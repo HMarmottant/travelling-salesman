@@ -34,7 +34,7 @@ type CityList = Vec<(String, CityPos)>;
 type CityDistList = Vec<f64>;
 type CityDistMatrix = Vec<CityDistList>;
 
-fn compute_spherical_d(cities: CityList) -> CityDistMatrix {
+fn compute_spherical_d(cities: &CityList) -> CityDistMatrix {
     let (tx, rx) = channel();
 
     // let l = cities.to_vec();
@@ -84,21 +84,25 @@ fn main() -> Result<(), csv::Error> {
     let reader = csv::Reader::from_path("./worldcities.csv");
 
     let mut cities: CityList = CityList::new();
+    let i = 0;
 
     for record in reader?.deserialize() {
         let record: Record = record?;
-        let city = CityPos {
-            lat: record.lat,
-            lng: record.lng,
-        };
-        cities.push((record.city_ascii, city));
-        // if record.country == "France" {
-        // }
+        if i < 500 {
+            let city = CityPos {
+                lat: record.lat,
+                lng: record.lng,
+            };
+            cities.push((record.city_ascii, city));
+        }
+        else {
+            break;
+        }
     }
 
     let now = Instant::now();
 
-    let mat = compute_spherical_d(cities);
+    let mat = compute_spherical_d(&cities);
 
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
