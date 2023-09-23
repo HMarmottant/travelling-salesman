@@ -49,7 +49,7 @@ fn compute_spherical_d(cities: &CityList) {
         let tht1 = lng1 * std::f64::consts::PI / 180f64;
         let earth_radius = 6371000f64;
         let mut list = CityDistList::new();
-        for city2 in 0..num_cities {
+        for city2 in 0..i {
             let lat2 = cities[city2].1.lat;
             let phi2 = lat2 * std::f64::consts::PI / 180f64;
             let lng2 = cities[city2].1.lng;
