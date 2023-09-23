@@ -84,7 +84,7 @@ fn compute_spherical_d(cities: &CityList) {
 
 fn main() -> Result<(), csv::Error> {
     rayon::ThreadPoolBuilder::new()
-        .num_threads(4)
+        .num_threads(num_cpus::get())
         .build_global()
         .unwrap();
     let reader = csv::Reader::from_path("./worldcities.csv");
@@ -94,7 +94,7 @@ fn main() -> Result<(), csv::Error> {
 
     for record in reader?.deserialize() {
         let record: Record = record?;
-        if i < 10000 {
+        if true {
             let city = CityPos {
                 lat: record.lat,
                 lng: record.lng,
