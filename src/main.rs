@@ -6,9 +6,9 @@ use std::fs;
 // use std::sync::mpsc::Sender;
 // use std::sync::mpsc::{channel, RecvError};
 // use std::thread;
-use std::time::Instant;
-use std::sync::mpsc::channel;
 use rayon::prelude::*;
+use std::sync::mpsc::channel;
+use std::time::Instant;
 #[derive(Debug, Serialize, Deserialize)]
 struct Record {
     city: String,
@@ -44,31 +44,29 @@ fn compute_spherical_d(cities: &CityList) -> CityDistMatrix {
 
     let num_cities = cities.len();
 
-    (0..num_cities).into_par_iter().for_each( |i| {
+    (0..num_cities).into_par_iter().for_each(|i| {
         let lat1 = cities[i].1.lat;
         let phi1 = lat1 * std::f64::consts::PI / 180f64;
         let lng1 = cities[i].1.lng;
         let tht1 = lng1 * std::f64::consts::PI / 180f64;
         let earth_radius = 6371000f64;
+        let mut list = CityDistList::new();
         for city2 in 0..num_cities {
-            let mut list = CityDistList::new();
-            {
-                let lat2 = cities[city2].1.lat;
-                let phi2 = lat2 * std::f64::consts::PI / 180f64;
-                let lng2 = cities[city2].1.lng;
-                let tht2 = lng2 * std::f64::consts::PI / 180f64;
+            let lat2 = cities[city2].1.lat;
+            let phi2 = lat2 * std::f64::consts::PI / 180f64;
+            let lng2 = cities[city2].1.lng;
+            let tht2 = lng2 * std::f64::consts::PI / 180f64;
 
-                let dphi = phi2 - phi1;
-                let dtht = tht2 - tht1;
+            let dphi = phi2 - phi1;
+            let dtht = tht2 - tht1;
 
-                let a = f64::powi(f64::sin(dphi / 2f64), 2)
-                    + f64::cos(phi1) * f64::cos(phi2) * f64::powi(f64::sin(dtht / 2f64), 2);
-                let c = 2f64 * f64::atan2(f64::sqrt(a), f64::sqrt(1f64 - a));
-                let d = earth_radius * c;
-                list.push(d);
-            }
-            tx.send(list).expect("Could not send data!");
+            let a = f64::powi(f64::sin(dphi / 2f64), 2)
+                + f64::cos(phi1) * f64::cos(phi2) * f64::powi(f64::sin(dtht / 2f64), 2);
+            let c = 2f64 * f64::atan2(f64::sqrt(a), f64::sqrt(1f64 - a));
+            let d = earth_radius * c;
+            list.push(d);
         }
+        tx.send(list).expect("Could not send data!");
     });
 
     for _ in 0..num_cities {
@@ -80,7 +78,10 @@ fn compute_spherical_d(cities: &CityList) -> CityDistMatrix {
 }
 
 fn main() -> Result<(), csv::Error> {
-    rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build_global()
+        .unwrap();
     let reader = csv::Reader::from_path("./worldcities.csv");
 
     let mut cities: CityList = CityList::new();
@@ -88,17 +89,16 @@ fn main() -> Result<(), csv::Error> {
 
     for record in reader?.deserialize() {
         let record: Record = record?;
-        if i < 2000 {
+        if i < 10000 {
             let city = CityPos {
                 lat: record.lat,
                 lng: record.lng,
             };
             cities.push((record.city_ascii, city));
-        }
-        else {
+        } else {
             break;
         }
-        i+=1;
+        i += 1;
     }
 
     let now = Instant::now();
@@ -110,6 +110,7 @@ fn main() -> Result<(), csv::Error> {
 
     let data = serde_json::to_string(&mat).unwrap();
     fs::write("./data/test.txt", data).expect("Unable to write file");
+
     // for list in mat {
     //     print!("Distance to : {}", list.0);
     //     for dist in list.1 {
@@ -117,7 +118,9 @@ fn main() -> Result<(), csv::Error> {
     //     }
     //     println!(" ")
     // }
-    println!("Done!");
+
+    println!("{}", mat.len());
+    println!("{}", mat[0].len());
 
     Ok(())
 }
