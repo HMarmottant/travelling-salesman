@@ -71,37 +71,6 @@ fn compute_spherical_d(cities: CityList) -> CityDistMatrix {
         }
     });
 
-    // for i in 0..num_cities {
-    //     let tx = tx.clone();
-
-    //     pool.execute(move || {
-    //         let lat1 = cities[i].1.lat;
-    //         let phi1 = lat1 * std::f64::consts::PI / 180f64;
-    //         let lng1 = cities[i].1.lng;
-    //         let tht1 = lng1 * std::f64::consts::PI / 180f64;
-    //         let earth_radius = 6371000f64;
-    //         for city2 in cities {
-    //             let mut list = CityDistList::new();
-    //             {
-    //                 let lat2 = city2.1.lat;
-    //                 let phi2 = lat2 * std::f64::consts::PI / 180f64;
-    //                 let lng2 = city2.1.lng;
-    //                 let tht2 = lng2 * std::f64::consts::PI / 180f64;
-
-    //                 let dphi = phi2 - phi1;
-    //                 let dtht = tht2 - tht1;
-
-    //                 let a = f64::powi(f64::sin(dphi / 2f64), 2)
-    //                     + f64::cos(phi1) * f64::cos(phi2) * f64::powi(f64::sin(dtht / 2f64), 2);
-    //                 let c = 2f64 * f64::atan2(f64::sqrt(a), f64::sqrt(1f64 - a));
-    //                 let d = earth_radius * c;
-    //                 list.push(d);
-    //             }
-    //             tx.send(list).expect("Could not send data!");
-    //         }
-    //     });
-    // }
-
     for _ in 0..num_cities {
         let list = rx.recv().unwrap();
         mat.push(list);
@@ -111,6 +80,7 @@ fn compute_spherical_d(cities: CityList) -> CityDistMatrix {
 }
 
 fn main() -> Result<(), csv::Error> {
+    rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
     let reader = csv::Reader::from_path("./worldcities.csv");
 
     let mut cities: CityList = CityList::new();
