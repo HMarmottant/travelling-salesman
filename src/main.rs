@@ -1,7 +1,7 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::f64;
-#[derive(Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Record {
     city: String,
     city_ascii: String,
@@ -63,13 +63,13 @@ fn main() -> Result<(), csv::Error> {
 
     for record in reader?.deserialize() {
         let record: Record = record?;
-        let city = CityPos {
-            lat: record.lat,
-            lng: record.lng,
-        };
-        cities.insert(record.city_ascii, city);
-        // if record.country == "France" {
-        // }
+        if record.country == "France" {
+            let city = CityPos {
+                lat: record.lat,
+                lng: record.lng,
+            };
+            cities.insert(record.city_ascii, city);
+        }
     }
 
     use std::time::Instant;
@@ -79,6 +79,10 @@ fn main() -> Result<(), csv::Error> {
 
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
+
+    let data = serde_json::to_string(&mat).unwrap();
+    use std::fs;
+    fs::write("./data/test.txt", data).expect("Unable to write file");
     // for list in mat {
     //     print!("Distance to : {}", list.0);
     //     for dist in list.1 {
