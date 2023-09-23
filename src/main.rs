@@ -2,12 +2,13 @@ use serde::{Deserialize, Serialize};
 // use std::collections::HashMap;
 use std::f64;
 use std::fs;
+// use std::path;
 // use std::sync::mpsc::Receiver;
 // use std::sync::mpsc::Sender;
 // use std::sync::mpsc::{channel, RecvError};
 // use std::thread;
 use rayon::prelude::*;
-use std::sync::mpsc::channel;
+// use std::sync::mpsc::channel;
 use std::time::Instant;
 #[derive(Debug, Serialize, Deserialize)]
 struct Record {
@@ -34,13 +35,10 @@ type CityList = Vec<(String, CityPos)>;
 type CityDistList = Vec<f64>;
 type CityDistMatrix = Vec<CityDistList>;
 
-fn compute_spherical_d(cities: &CityList) -> CityDistMatrix {
-    let (tx, rx) = channel();
+fn compute_spherical_d(cities: &CityList) {
+    // let (tx, rx) = channel();
 
-    // let l = cities.to_vec();
-    // let copy = cities.to_vec();
-
-    let mut mat: CityDistMatrix = CityDistMatrix::new();
+    // let mut mat: CityDistMatrix = CityDistMatrix::new();
 
     let num_cities = cities.len();
 
@@ -66,15 +64,22 @@ fn compute_spherical_d(cities: &CityList) -> CityDistMatrix {
             let d = earth_radius * c;
             list.push(d);
         }
-        tx.send(list).expect("Could not send data!");
+        let data = serde_json::to_string(&list).unwrap();
+        let mut filepath: String = "./data/".to_owned();
+        filepath += &i.to_string();
+        filepath += &".dat";
+
+        fs::write(filepath, data).expect("Unable to write file");
+
+        // tx.send(list).expect("Could not send data!");
     });
 
-    for _ in 0..num_cities {
-        let list = rx.recv().unwrap();
-        mat.push(list);
-    }
+    // for _ in 0..num_cities {
+    //     let list = rx.recv().unwrap();
+    //     mat.push(list);
+    // }
 
-    return mat;
+    // return mat;
 }
 
 fn main() -> Result<(), csv::Error> {
@@ -103,24 +108,10 @@ fn main() -> Result<(), csv::Error> {
 
     let now = Instant::now();
 
-    let mat = compute_spherical_d(&cities);
+    compute_spherical_d(&cities);
 
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
-
-    let data = serde_json::to_string(&mat).unwrap();
-    fs::write("./data/test.txt", data).expect("Unable to write file");
-
-    // for list in mat {
-    //     print!("Distance to : {}", list.0);
-    //     for dist in list.1 {
-    //         print!("{} : {}", dist.0, dist.1);
-    //     }
-    //     println!(" ")
-    // }
-
-    println!("{}", mat.len());
-    println!("{}", mat[0].len());
 
     Ok(())
 }
