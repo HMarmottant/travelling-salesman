@@ -84,11 +84,11 @@ fn main() -> Result<(), csv::Error> {
     let reader = csv::Reader::from_path("./worldcities.csv");
 
     let mut cities: CityList = CityList::new();
-    let i = 0;
+    let mut i = 0;
 
     for record in reader?.deserialize() {
         let record: Record = record?;
-        if i < 500 {
+        if i < 2000 {
             let city = CityPos {
                 lat: record.lat,
                 lng: record.lng,
@@ -98,6 +98,7 @@ fn main() -> Result<(), csv::Error> {
         else {
             break;
         }
+        i+=1;
     }
 
     let now = Instant::now();
