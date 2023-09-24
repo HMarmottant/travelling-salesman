@@ -1,5 +1,5 @@
 use rayon::prelude::*;
-use std::fs;
+use std::{fs::{self, File}, io::BufReader};
 
 use crate::CityUtil;
 
@@ -39,4 +39,28 @@ pub fn compute(cities: &CityUtil::CityList) {
 
         fs::write(filepath, data).expect("Unable to write file");
     });
+}
+
+pub fn get_data(filepath: &str) -> CityUtil::CityDistMatrix {
+    let paths = fs::read_dir(filepath).unwrap();
+    let ms = paths.count();
+    let mut mat = CityUtil::CityDistMatrix::new();
+    mat.resize(ms, CityUtil::CityDistList::new());
+
+
+    let paths = fs::read_dir(filepath).unwrap();
+
+    for path in paths {
+        let upath = path.unwrap();
+        let p = upath.path();
+        let ssize = upath.file_name().into_string().unwrap();
+        let size =  ssize[..(ssize.len()-4)].parse::<usize>().unwrap();
+        // println!("{size}");
+        let file = File::open(p).unwrap();
+        let reader = BufReader::new(file);
+        let data: CityUtil::CityDistList = serde_json::from_reader(reader).unwrap();
+        mat[size] = data;
+    }
+
+    return mat;
 }
