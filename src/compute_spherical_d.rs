@@ -43,9 +43,16 @@ pub fn compute(cities: &CityUtil::CityList) {
 
 pub fn get_data(filepath: &str) -> CityUtil::CityDistMatrix {
     let paths = fs::read_dir(filepath).unwrap();
-    let ms = paths.count();
+    
+    let paths = fs::read_dir(filepath).unwrap();
+
+    let mut i = 0;
+    for _ in paths {
+        i += 1;
+    }
+
     let mut mat = CityUtil::CityDistMatrix::new();
-    mat.resize(ms, CityUtil::CityDistList::new());
+    mat.resize(i, CityUtil::CityDistList::new());
 
 
     let paths = fs::read_dir(filepath).unwrap();
